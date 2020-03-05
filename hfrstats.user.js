@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           [HFR] Stats
 // @namespace      ddst.github.io
-// @version        0.0.1
+// @version        0.0.2
 // @description    Afficher les statistiques d'un membre
 // @author         DdsT
 // @URL            https://ddst.github.io/HFR_Stats/
@@ -229,7 +229,6 @@ function showResult() {
   yearChart.id = "hfr-stats-chart";
   results.appendChild(yearChart);
   results.show();
-  console.log(query.pseudo + " : " + messageList.length);
   progress.hide();
 }
 
@@ -410,7 +409,6 @@ function formatData() {
       }  
     }
   }
-  console.log(formattedData);
 }
 
 /********************
