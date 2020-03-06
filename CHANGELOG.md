@@ -1,6 +1,12 @@
 
 # Historique
 
+## v0.0.4 (2020-03-06)
+
+- Support des url en ://forum.hardware.fr/hfr/
+- `0 message` remplacé par `Aucun message`
+ 
+ 
 ## v0.0.3 (2020-03-06)
 
 - Support des pseudos contenant le caractère `'`
