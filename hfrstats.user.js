@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           [HFR] Stats
 // @namespace      ddst.github.io
-// @version        0.0.3
+// @version        0.0.4
 // @description    Afficher les statistiques d'un membre
 // @author         DdsT
 // @URL            https://ddst.github.io/HFR_Stats/
@@ -9,6 +9,7 @@
 // @updateURL      https://ddst.github.io/HFR_Stats/hfrstats.meta.js
 // @icon           https://forum.hardware.fr/favicon.ico
 // @match          *://forum.hardware.fr/forum2.php*
+// @match          *://forum.hardware.fr/hfr/*/*sujet_*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js
 // ==/UserScript==
 
@@ -33,14 +34,10 @@ along with this program.  If not, see https://ddst.github.io/HFR_Stats/LICENSE.
  * beaucoup
  *************************************/
 
-/* v0.0.3
+/* v0.0.4
  * ------
- * Support des pseudos contenant le caractère '
- * Ajout de commentaires
- * Ajout d'une fonction dédiée pour la détermination des couleurs
- * Ajout de paramètres de configuration (pas d'interface pour l'instant)
- * Ajout d'un délai entre les requêtes
- * Les messages d'une requête sont maintenant traités immédiatement
+ * Support des url en ://forum.hardware.fr/hfr/
+ * "0 message" remplacé par "Aucun message"
  */
 
 this.$ = this.jQuery = jQuery.noConflict(true);
@@ -268,6 +265,7 @@ function mouseEnter(evt) {
   let count = $(evt.target).attr('data-count');
   let date = $(evt.target).attr('data-date');
   let countText = ( count > 1 ) ? "messages" : "message";
+  count = (count > 0) ? count : "Aucun";
   tooltip.style.display ="block";
   $(tooltip).html(`${count} ${countText} le ${date}`);
 
