@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           [HFR] Stats
 // @namespace      ddst.github.io
-// @version        0.0.2
+// @version        0.0.3
 // @description    Afficher les statistiques d'un membre
 // @author         DdsT
 // @URL            https://ddst.github.io/HFR_Stats/
@@ -33,6 +33,16 @@ along with this program.  If not, see https://ddst.github.io/HFR_Stats/LICENSE.
  * beaucoup
  *************************************/
 
+/* v0.0.3
+ * ------
+ * Support des pseudos contenant le caractère '
+ * Ajout de commentaires
+ * Ajout d'une fonction dédiée pour la détermination des couleurs
+ * Ajout de paramètres de configuration (pas d'interface pour l'instant)
+ * Ajout d'un délai entre les requêtes
+ * Les messages d'une requête sont maintenant traités immédiatement
+ */
+
 this.$ = this.jQuery = jQuery.noConflict(true);
 
 const VERSION = GM.info.script.version;
@@ -41,6 +51,16 @@ const POST    = $("input[name='post']").attr("value");
 const CAT     = $("input[name='cat']").attr("value");
 const TOPIC   = CAT & POST;
 const TITLE   = $(".fondForum2Title").find("h3").text();
+
+/*****************
+ * CONFIGURATION * 
+ *****************/
+
+let config = {
+  queryDelay : 500,
+  colorBegin : "#d6e685",
+  colorEnd   : "#44a340"
+}
 
 /********************
  * MODULE INTERFACE * 
@@ -126,6 +146,7 @@ function addStyle(aCss) {
   }
 }
 
+/* Conteneur qui contient l'ensemble de l'interface */
 let statsContainer = document.createElement("div");
 statsContainer.id = "hfr-stats-container";
 statsContainer.show = () => {
@@ -148,6 +169,7 @@ let statsModal = document.createElement("div");
 statsModal.id = "hfr-stats-modal";
 $(statsContainer).append($(statsModal));
 
+/* Barre de progression et son conteneur */
 let progress = document.createElement("div");
 progress.id = "hfr-stats-progress";
 progress.show = () => {
@@ -164,6 +186,7 @@ bar.setProgress = (progress) => {bar.style.width = progress + "%";};
 $(statsModal).append($(progress));
 $(progress).append($(bar));
 
+/* Panneau de visualisation des résultats */
 let results = document.createElement("div");
 results.id = "hfr-stats-results";
 results.show = () => {
@@ -176,6 +199,7 @@ results.hide = () => {
 };
 $(statsModal).append($(results));
 
+/* Texte du panneau des résultats */
 let summary = document.createElement("div");
 summary.id = "hfr-stats-summary";
 summary.update = () => {
@@ -254,6 +278,15 @@ function mouseEnter(evt) {
   $(tooltip).css({left:targetOffset.left - svgWidth});
 }
 
+/* Renvoyer une couleur en fonction du nombre de messages */
+function getColor(count) {
+  let color     = ['#eeeeee','#d6e685','#8cc665','#44a340','#44a340'];
+  let threshold = [0        ,1        ,5        ,10       ,20       ];
+  let i = 0;
+  while (i < threshold.length && count >= threshold[i]) ++i;
+  return color[i-1];
+}
+
 /* Créer un graphique d'activité
  * Code adapté du projet Github-Contribution-Graph par bachvtuan
  * https://github.com/bachvtuan/Github-Contribution-Graph 
@@ -263,24 +296,12 @@ function newChart(options) {
   let div = document.createElement("div");
 
   let settings = $.extend({
-    colors:    ['#eeeeee','#d6e685','#8cc665','#44a340','#44a340'],
-    threshold: [0        ,1        ,5        ,10       ,20       ],
     monthNames: ['Jan','Fev','Mar','Avr','Mai','Jui','Jui','Aoû','Sep','Oct','Nov','Dec'],
     dayNames : ["Lu","Ma","Me","Je","Ve","Sa","Di"],
     data:{}
   }, options );
 
   let dateList = settings.data.dateList;
-
-  let getCount = function(displayDate) {
-    return (dateList[displayDate]) ? dateList[displayDate] : 0;
-  }
-
-  let getColor = function(count) {
-    let i = 0;
-    while (i < settings.threshold.length && count >= settings.threshold[i]) ++i;
-    return settings.colors[i-1];
-  }
 
   if (!settings.end) settings.end = new Date();
   let end = new Date(settings.end);
@@ -316,7 +337,7 @@ function newChart(options) {
         monthIndex.push({index: currentMonth, x: xOffset });
       }
       
-      let count = getCount(displayDate);
+      let count = dateList[displayDate] || 0;
       let color = getColor(count);
       if (dayOffset > 1) {
         //Les premiers jours du graphique sont ignorés s'ils ne sont pas dans la plage temporelle considérée
@@ -362,11 +383,16 @@ function newChart(options) {
  * MODULE DONNÉES *
  ******************/
 
-/* Liste contenant l'ensemble des messages du membre */
-let messageList = [];
-
 /* Liste des messages utilisés pour les visualisations */
-let formattedData = {};
+let formattedData = {
+  reset() {
+    formattedData.dateList    = {};
+    formattedData.total       = 0;
+    formattedData.subtotal    = 0;
+    formattedData.begin       = 0;
+    formattedData.end         = 0;
+  }
+}
 
 /* Décomposer un message en un objet facilement manipulable */
 function parse(message) {
@@ -389,14 +415,12 @@ function parse(message) {
 }
 
 /* Mettre en forme les données dans la plage temporelle considérée pour la visualisation */
-function formatData() {
-  formattedData = {
-    dateList : {},
-    total    : messageList.length,
-    subtotal : 0,
-    begin    : messageList[0].date,
-    end      : messageList[messageList.length-1].date
-  };
+function formatData(messageList) {
+
+  formattedData.total += messageList.length;
+  formattedData.begin = formattedData.begin || messageList[0].date;
+  formattedData.end = messageList[messageList.length-1].date;
+  
   for (const timestamp of messageList) {
     let timestampDate = new Date(timestamp.date);
     if (timestampDate >= query.begin && timestampDate <= query.end) {
@@ -430,7 +454,7 @@ function update(pseudo, begin, end) {
   query.currentnum = 0;
   query.begin      = begin;
   query.end        = end;
-  messageList      = [];
+  formattedData.reset();
   search();
 }
 
@@ -441,22 +465,24 @@ function search() {
 
 /* Traiter la page obtenue lors d'une recherche filtrée sur un pseudo */
 function parseSearch(data) {
+  let messageList = [];
   let searchPage = $.parseHTML(data);
   let searchTable = $(searchPage).find(".messagetable");
   for (let i = 0; i < searchTable.length; ++i) {
     let parsedMessage = parse(searchTable.get(i));
     messageList.push(parsedMessage);
   }
+
   let currentnum = $(searchPage).find("input[name='currentnum']").get(0)
-  let today = Date.parse(new Date());
-  let progress = (messageList[messageList.length-1].date - messageList[0].date) / (today - messageList[0].date) * 100;
-  bar.setProgress(progress);
   if (currentnum) {
     //Une page contient au maximum 200 messages du membre, le numéro du dernier message est utilisé pour voir les messages suivants
+    formatData(messageList);
+    let today = Date.parse(new Date());
+    let progress = (messageList[messageList.length-1].date - formattedData.begin) / (today - formattedData.begin) * 100;
+    bar.setProgress(progress);
     query.currentnum = currentnum.value;
-    search();
+    setTimeout(search, config.queryDelay);
   } else {
-    formatData();
     showResult();
   }
 }
@@ -466,9 +492,7 @@ function parseSearch(data) {
  *********************/
 
 function fixPseudo(str) {
-  return encodeURIComponent(str.replace(/\u200b/g, "").toLowerCase()).replace(/[!'()*]/g, function(c) {
-    return '%' + c.charCodeAt(0).toString(16);
-  });
+  return encodeURIComponent(str.replace(/\u200b/g, "").replace(/'/g, "&#039;").toLowerCase());
 }
 
 function getDisplayDate(date) {
