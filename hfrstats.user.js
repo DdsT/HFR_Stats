@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name           [HFR] Stats
 // @namespace      ddst.github.io
-// @version        0.0.4
+// @version        0.0.5
 // @description    Afficher les statistiques d'un membre
 // @author         DdsT
 // @URL            https://ddst.github.io/HFR_Stats/
 // @downloadURL    https://ddst.github.io/HFR_Stats/hfrstats.user.js
 // @updateURL      https://ddst.github.io/HFR_Stats/hfrstats.meta.js
+// @supportURL     https://ddst.github.io/HFR_Stats/
 // @icon           https://forum.hardware.fr/favicon.ico
 // @match          *://forum.hardware.fr/forum2.php*
 // @match          *://forum.hardware.fr/hfr/*/*sujet_*
@@ -31,13 +32,19 @@ along with this program.  If not, see https://ddst.github.io/HFR_Stats/LICENSE.
 */
 
 /************** TODO *****************
- * beaucoup
+ * Sauvegarder les résultats
+ * Ajouter une configuration
+ * Ajouter un onglet dédié pour le script
+ * Ajouter la possibilité de choisir sa plage temporelle d'analyse
+ * Ajouter de nouveaux indicateurs (heure de la semaine, smileys, citations, contenu...)
+ * Ajouter l'analyse complète du sujet
+ * Ajouter l'analyse inter-sujet
  *************************************/
 
-/* v0.0.4
+/* v0.0.5
  * ------
- * Support des url en ://forum.hardware.fr/hfr/
- * "0 message" remplacé par "Aucun message"
+ * Performance : Les images des pages de recherche récupérées en arrière plan ne sont plus chargées
+ * Modification de la façon dont est rajoutée l'icone sur la barre d'outils
  */
 
 this.$ = this.jQuery = jQuery.noConflict(true);
@@ -214,7 +221,7 @@ $(results).append($(summary));
 
 /* Ajouter le bouton de statistiques à la barre d'outil d'un message */
 function decorate(message) {
-  let toolbar = $(message).find(".toolbar div").get(0);
+  let toolbar = $(message).find(".toolbar .left");
   let button = document.createElement("img");
   let pseudo = $(message).find("b.s2").text();
   button.src = CHART_ICON;
@@ -223,7 +230,8 @@ function decorate(message) {
   button.style.cursor = "pointer";
   button.pseudo = pseudo;
   button.onclick = buttonClick;
-  $(toolbar).append($(button));
+  if (toolbar.length == 0) toolbar = $(message).find(".toolbar .right");
+  toolbar.append($(button));
 }
 
 function buttonClick() {
@@ -446,6 +454,9 @@ let query = {
   }
 }
 
+/* document virtuel où seront chargées les requêtes, permet d'éviter le chargement des images */
+let virtualDOM = document.implementation.createHTMLDocument('virtual');
+
 /* Mettre à jour les statistiques d'un membre */
 function update(pseudo, begin, end) {
   query.pseudo     = pseudo;
@@ -464,7 +475,7 @@ function search() {
 /* Traiter la page obtenue lors d'une recherche filtrée sur un pseudo */
 function parseSearch(data) {
   let messageList = [];
-  let searchPage = $.parseHTML(data);
+  let searchPage = $.parseHTML(data, virtualDOM);
   let searchTable = $(searchPage).find(".messagetable");
   for (let i = 0; i < searchTable.length; ++i) {
     let parsedMessage = parse(searchTable.get(i));
