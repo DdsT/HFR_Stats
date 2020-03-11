@@ -1,6 +1,12 @@
 
 # Historique
 
+## v0.0.5 (2020-03-11)
+
+- Performance : Les images des pages de recherche récupérées en arrière plan ne sont plus chargées
+- Modification de la façon dont est rajoutée l'icone sur la barre d'outils
+
+
 ## v0.0.4 (2020-03-06)
 
 - Support des url en ://forum.hardware.fr/hfr/
