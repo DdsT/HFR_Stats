@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           [HFR] Stats
 // @namespace      ddst.github.io
-// @version        0.0.5
+// @version        0.0.6
 // @description    Afficher les statistiques d'un membre
 // @author         DdsT
 // @URL            https://ddst.github.io/HFR_Stats/
@@ -41,10 +41,9 @@ along with this program.  If not, see https://ddst.github.io/HFR_Stats/LICENSE.
  * Ajouter l'analyse inter-sujet
  *************************************/
 
-/* v0.0.5
+/* v0.0.6
  * ------
- * Performance : Les images des pages de recherche récupérées en arrière plan ne sont plus chargées
- * Modification de la façon dont est rajoutée l'icone sur la barre d'outils
+ * Amélioration de la compatibilité avec [HFR] Chat v1.0.2
  */
 
 this.$ = this.jQuery = jQuery.noConflict(true);
@@ -223,7 +222,7 @@ $(results).append($(summary));
 function decorate(message) {
   let toolbar = $(message).find(".toolbar .left");
   let button = document.createElement("img");
-  let pseudo = $(message).find("b.s2").text();
+  let pseudo = $(message).find("b.s2").first().text();
   button.src = CHART_ICON;
   button.className = "hfr-stats";
   button.title = `Statistiques de ${pseudo} pour ce sujet`;
@@ -516,4 +515,5 @@ addStyle(STYLE);
 // Ajout des icones aux barres d'outil
 $(".messagetable").each(function() {
   decorate(this);
-});
+})
+           
