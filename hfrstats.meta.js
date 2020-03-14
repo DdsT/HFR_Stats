@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           [HFR] Stats
 // @namespace      ddst.github.io
-// @version        0.0.5
+// @version        0.0.6
 // @description    Afficher les statistiques d'un membre
 // @author         DdsT
 // @URL            https://ddst.github.io/HFR_Stats/
