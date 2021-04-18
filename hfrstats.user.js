@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           [HFR] Stats
 // @namespace      ddst.github.io
-// @version        0.0.6
+// @version        0.0.7
 // @description    Afficher les statistiques d'un membre
 // @author         DdsT
 // @URL            https://ddst.github.io/HFR_Stats/
@@ -41,9 +41,10 @@ along with this program.  If not, see https://ddst.github.io/HFR_Stats/LICENSE.
  * Ajouter l'analyse inter-sujet
  *************************************/
 
-/* v0.0.6
+/* v0.0.7
  * ------
- * Amélioration de la compatibilité avec [HFR] Chat v1.0.2
+ * Correction d'un bug concernant le format des dates
+ * les couleurs et les seuils sont configurables depuis la variable "config" en tête de script
  */
 
 this.$ = this.jQuery = jQuery.noConflict(true);
@@ -61,8 +62,8 @@ const TITLE   = $(".fondForum2Title").find("h3").text();
 
 let config = {
   queryDelay : 500,
-  colorBegin : "#d6e685",
-  colorEnd   : "#44a340"
+  color      : ['#eeeeee','#d6e685','#8cc665','#44a340','#44a340'],
+  threshold  : [0        ,1        ,5        ,10       ,20       ],
 }
 
 /********************
@@ -285,11 +286,9 @@ function mouseEnter(evt) {
 
 /* Renvoyer une couleur en fonction du nombre de messages */
 function getColor(count) {
-  let color     = ['#eeeeee','#d6e685','#8cc665','#44a340','#44a340'];
-  let threshold = [0        ,1        ,5        ,10       ,20       ];
   let i = 0;
-  while (i < threshold.length && count >= threshold[i]) ++i;
-  return color[i-1];
+  while (i < config.threshold.length && count >= config.threshold[i]) ++i;
+  return config.color[i-1];
 }
 
 /* Créer un graphique d'activité
@@ -504,7 +503,7 @@ function fixPseudo(str) {
 }
 
 function getDisplayDate(date) {
-  return date.toLocaleString("fr-fr").replace(/ à .*/,"");
+  return date.toLocaleString("fr-fr", {year: "numeric", month: "2-digit", day: "2-digit",});
 }
 
 /***************************
@@ -516,4 +515,3 @@ addStyle(STYLE);
 $(".messagetable").each(function() {
   decorate(this);
 })
-           
