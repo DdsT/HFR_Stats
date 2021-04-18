@@ -1,6 +1,10 @@
 
 # Historique
 
+## v0.0.7 (2021-04-18)
+- Correction d'un bug concernant le format des dates
+- Les couleurs et les seuils sont configurables depuis la variable "config" en tête de script
+
 ## v0.0.6 (2020-03-14)
 
 - Amélioration de la compatibilité avec [HFR] Chat v1.0.2
